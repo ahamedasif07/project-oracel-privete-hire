@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import {
   ShieldCheck,
   Clock,
@@ -11,24 +14,27 @@ import {
   ChevronRight,
   Briefcase,
   MapPin,
-  PartyPopper,
   Heart,
   Crown,
   Car,
   CheckCircle2,
   PhoneCall,
-  Flame,
   Wine,
   Wifi,
   Radio,
+  Sliders,
+  Navigation,
 } from "lucide-react";
+import { LuxuryCarConfigurator } from "@/components/home/luxury-car-configurator";
+import { ChauffeurJourneyTimeline } from "@/components/home/chauffeur-journey-timeline";
+import { InteractiveAirportMatrix } from "@/components/home/interactive-airport-matrix";
 
 export default function HomePage() {
   const stats = [
-    { value: "5+", label: "Years of Chauffeur Prestige" },
-    { value: "50,00+", label: "VIP Journeys Completed" },
-    { value: "4.88 ★", label: "Trustpilot Client Rating" },
-    { value: "97%", label: "Guaranteed Punctuality" },
+    { value: "5+", label: "Years of Chauffeur Prestige", detail: "Serving VIP clientele" },
+    { value: "50,000+", label: "VIP Journeys Completed", detail: "Across London & UK" },
+    { value: "4.98 ★", label: "Trustpilot Client Rating", detail: "Verified passenger reviews" },
+    { value: "99.8%", label: "Guaranteed Punctuality", detail: "Live radar precision" },
   ];
 
   const services = [
@@ -82,48 +88,6 @@ export default function HomePage() {
     },
   ];
 
-  const fleetPreview = [
-    {
-      name: "Executive Saloon",
-      tag: "Mercedes-Benz E-Class",
-      image: "/images/fleet-executive.jpg",
-      seats: 3,
-      bags: 2,
-      price: "From £45",
-      desc: "Understated elegance, whisper-quiet hybrid ride, and effortless business travel comfort.",
-      features: ["Leather Seats", "Dual Climate", "High-Speed Wi-Fi", "Bottled Water"],
-    },
-    {
-      name: "Luxury VIP MPV",
-      tag: "Mercedes-Benz V-Class",
-      image: "/images/fleet-mpv.jpg",
-      seats: 7,
-      bags: 7,
-      price: "From £65",
-      desc: "Spacious conference face-to-face seating and huge luggage capacity for corporate groups and families.",
-      features: ["Conference Seating", "Extra Luggage Space", "Privacy Glass", "USB-C Chargers"],
-    },
-    {
-      name: "Prestige Chauffeur SUV",
-      tag: "Range Rover Autobiography",
-      image: "/images/fleet-suv.jpg",
-      seats: 4,
-      bags: 4,
-      price: "From £85",
-      desc: "Commanding road presence, elevated ride height, and bespoke diamond-quilted leather interior.",
-      features: ["Panoramic Glass Roof", "Heated Seats", "Meridian Sound", "All-Terrain Smoothness"],
-    },
-  ];
-
-  const airportTerminals = [
-    { name: "London Heathrow (LHR)", code: "T2, T3, T4, T5 & Windsor Suite", distance: "25 mins" },
-    { name: "London Gatwick (LGW)", code: "North & South Terminals", distance: "45 mins" },
-    { name: "London Stansted (STN)", code: "Main Terminal & Harrods Aviation", distance: "40 mins" },
-    { name: "London Luton (LTN)", code: "Signature Flight Support FBO", distance: "35 mins" },
-    { name: "London City Airport (LCY)", code: "Private Jet Centre & Commercial", distance: "20 mins" },
-    { name: "Farnborough & Biggin Hill", code: "VIP Private Aviation Terminals", distance: "Direct" },
-  ];
-
   const cabinAmenities = [
     {
       icon: Wine,
@@ -166,30 +130,38 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="bg-[#0B0B0C] text-foreground">
+    <div className="bg-[#0B0B0C] text-foreground selection:bg-gold selection:text-ink">
       {/* 1. HERO SECTION */}
-      <section className="relative min-h-[95vh] overflow-hidden flex items-center pt-24 pb-16">
+      <section className="relative min-h-[96vh] overflow-hidden flex items-center pt-24 pb-16">
         {/* Background Image with Cinematic Gradient Layers */}
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/hero.jpg"
             alt="Luxury Maybach Chauffeur in Mayfair London"
             fill
-            className="object-cover object-center scale-105 transition-transform duration-1000 ease-out brightness-[0.42]"
+            className="object-cover object-center scale-105 transition-transform duration-1000 ease-out brightness-[0.40]"
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0C] via-[#0B0B0C]/60 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0B0B0C] via-[#0B0B0C]/70 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0B0B0C] via-[#0B0B0C]/75 to-transparent" />
           {/* Subtle Ambient Gold Glow */}
-          <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-gold/10 blur-3xl pointer-events-none animate-pulse-glow" />
+          <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-gold/15 blur-[120px] pointer-events-none animate-pulse-glow" />
         </div>
 
         <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-10 w-full py-12">
-          <div className="max-w-3xl animate-fade-up">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="max-w-3xl"
+          >
             {/* Live Status Pill */}
-            <div className="inline-flex items-center gap-2.5 rounded-full border border-gold/40 bg-black/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gold backdrop-blur-xl mb-6 shadow-gold">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>🟢 24/7 Chauffeurs Active Across London &amp; UK</span>
+            <div className="inline-flex items-center gap-2.5 rounded-full border border-gold/40 bg-black/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gold backdrop-blur-xl mb-6 shadow-gold">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+              </span>
+              <span>24/7 Chauffeurs Active Across London &amp; UK</span>
             </div>
 
             <h1 className="font-display text-5xl leading-[1.05] md:text-7xl lg:text-[5.5rem] text-white font-bold tracking-tight">
@@ -205,14 +177,14 @@ export default function HomePage() {
             <div className="mt-10 flex flex-wrap gap-4 items-center">
               <Link
                 href="/booking"
-                className="rounded-full btn-gold px-9 py-4 text-base font-bold shadow-gold inline-flex items-center gap-2.5 group"
+                className="rounded-full btn-gold px-9 py-4 text-base font-bold shadow-gold inline-flex items-center gap-2.5 group transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
               >
                 <span>Get Instant Quote</span>
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
                 href="/fleet"
-                className="rounded-full btn-ghost-gold px-8 py-4 text-base font-semibold inline-flex items-center gap-2"
+                className="rounded-full btn-ghost-gold px-8 py-4 text-base font-semibold inline-flex items-center gap-2 hover:bg-white/5 transition-all"
               >
                 <span>Explore Fleet</span>
               </Link>
@@ -244,201 +216,74 @@ export default function HomePage() {
                 <span className="text-xs text-foreground/90 font-medium">Complimentary Meet &amp; Greet</span>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Floating VIP Card */}
-        <div className="pointer-events-none absolute bottom-12 right-12 hidden animate-float-gentle lg:block z-20">
-          <div className="glass-panel-gold pointer-events-auto rounded-3xl p-7 text-right border border-gold/40 shadow-2xl">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1, delay: 0.4 }}
+          className="pointer-events-none absolute bottom-12 right-12 hidden animate-float-gentle lg:block z-20"
+        >
+          <div className="glass-panel-gold pointer-events-auto rounded-3xl p-7 text-right border border-gold/40 shadow-2xl backdrop-blur-2xl">
             <div className="flex items-center justify-end gap-1 text-gold mb-1">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className="h-3.5 w-3.5 fill-gold text-gold" />
               ))}
             </div>
             <p className="text-[10px] uppercase tracking-[0.28em] text-gold font-bold">Heathrow VIP Transfers</p>
-            <p className="mt-1 font-display text-4xl text-gradient-gold font-bold">From £45</p>
+            <p className="mt-1 font-display text-4xl text-gradient-gold font-bold">From £55</p>
             <p className="text-xs text-muted-foreground mt-1">Fixed Quote &middot; 60m Free Waiting</p>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* 2. STATS BANNER */}
       <section className="border-y border-white/5 bg-[#0F0F12]">
         <div className="mx-auto max-w-7xl px-6 py-12 lg:px-10">
           <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
-            {stats.map((s) => (
-              <div key={s.label} className="text-center md:text-left">
+            {stats.map((s, idx) => (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                className="text-center md:text-left"
+              >
                 <p className="font-display text-4xl md:text-5xl font-bold text-gradient-gold">
                   {s.value}
                 </p>
-                <p className="mt-2 text-xs md:text-sm uppercase tracking-wider text-muted-foreground font-medium">
+                <p className="mt-2 text-xs md:text-sm uppercase tracking-wider text-white font-semibold">
                   {s.label}
                 </p>
-              </div>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{s.detail}</p>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 3. AIRPORT TRANSFERS SPOTLIGHT */}
+      {/* 3. UNIQUE FEATURE: INTERACTIVE LUXURY FLEET & CABIN MOOD CONFIGURATOR */}
+      <LuxuryCarConfigurator />
+
+      {/* 4. UNIQUE FEATURE: 4-STAGE INTERACTIVE CHAUFFEUR PROTOCOL & RADAR TIMELINE */}
+      <ChauffeurJourneyTimeline />
+
+      {/* 5. UNIQUE FEATURE: INTERACTIVE AIRPORT & PRIVATE JET FBO MATRIX */}
+      <InteractiveAirportMatrix />
+
+      {/* 6. FIRST-CLASS CABIN EXPERIENCE */}
       <section className="mx-auto max-w-7xl px-6 py-24 lg:px-10 lg:py-32">
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-          <div className="relative overflow-hidden rounded-3xl border border-gold/30 aspect-[4/3] group shadow-2xl">
-            <Image
-              src="/images/airport.jpg"
-              alt="VIP Airport Transfer Chauffeur at London Terminal"
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0C] via-transparent to-transparent" />
-            <div className="absolute bottom-6 left-6 right-6 p-6 rounded-2xl glass-card border border-gold/40">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] uppercase tracking-widest text-gold font-bold">
-                    Direct Terminal Meet &amp; Greet
-                  </span>
-                  <p className="text-lg font-display text-white font-semibold mt-0.5">
-                    Live Flight Radar Dispatch
-                  </p>
-                </div>
-                <Link
-                  href="/booking?service=airport"
-                  className="rounded-full btn-gold px-5 py-2 text-xs font-bold shrink-0"
-                >
-                  Book Airport
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div>
-              <span className="text-xs uppercase tracking-[0.32em] text-gold font-bold">
-                Airport Logistics
-              </span>
-              <h2 className="mt-2 font-display text-3xl md:text-5xl text-white font-bold leading-tight">
-                Seamless arrivals. Zero airport stress.
-              </h2>
-              <p className="mt-4 text-base text-muted-foreground leading-relaxed">
-                Whether you land at Heathrow, Gatwick, London City, or arrive via a private FBO jet,
-                our operations team monitors your flight radar in real time. If your flight is early or
-                delayed, your chauffeur adjusts automatically.
-              </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2 pt-2">
-              {airportTerminals.map((t) => (
-                <div key={t.name} className="glass-card p-4 rounded-2xl border border-white/5">
-                  <p className="text-xs font-bold text-white flex items-center justify-between">
-                    <span>{t.name}</span>
-                    <span className="text-[10px] text-gold font-mono">{t.distance}</span>
-                  </p>
-                  <p className="text-[11px] text-muted-foreground mt-1">{t.code}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="pt-4">
-              <Link
-                href="/airport-transfers"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-gold hover:gap-3 transition-all"
-              >
-                <span>Explore all UK airport transfer guides</span>
-                <ChevronRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. THE LUXURY FLEET */}
-      <section className="border-t border-white/5 bg-[#0E0E11] py-24 lg:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-10">
-          <div className="mb-14 max-w-3xl">
-            <span className="text-xs uppercase tracking-[0.32em] text-gold font-bold">
-              The Prestige Fleet
-            </span>
-            <h2 className="mt-2 font-display text-3xl md:text-5xl text-white font-bold leading-tight">
-              Obsidian black luxury, valeted to perfection.
-            </h2>
-            <p className="mt-4 text-base text-muted-foreground">
-              All vehicles are latest models, finished in deep metallic black with privacy glass,
-              complimentary high-speed Wi-Fi, and executive seating.
-            </p>
-          </div>
-
-          <div className="grid gap-8 md:grid-cols-3">
-            {fleetPreview.map((v) => (
-              <article
-                key={v.name}
-                className="group overflow-hidden rounded-3xl border border-white/5 bg-[#141418] transition-all duration-500 hover:border-gold/50 hover:shadow-2xl flex flex-col justify-between"
-              >
-                <div>
-                  <div className="relative aspect-[16/10] overflow-hidden bg-black">
-                    <Image
-                      src={v.image}
-                      alt={v.name}
-                      fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute top-4 left-4">
-                      <span className="rounded-full bg-black/80 border border-gold/40 px-3 py-1 text-[10px] uppercase tracking-widest text-gold backdrop-blur font-bold">
-                        {v.tag}
-                      </span>
-                    </div>
-                    <div className="absolute bottom-4 right-4">
-                      <span className="rounded-full bg-gold text-ink px-3 py-1 text-xs font-bold shadow-gold">
-                        {v.price}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-6 space-y-4">
-                    <div>
-                      <h3 className="font-display text-2xl text-white font-bold">{v.name}</h3>
-                      <p className="mt-2 text-xs text-muted-foreground leading-relaxed">{v.desc}</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-xs text-foreground/80 pt-2 border-t border-white/5">
-                      {v.features.map((f) => (
-                        <span key={f} className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                          <CheckCircle2 className="h-3 w-3 text-gold shrink-0" />
-                          <span>{f}</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-6 pt-0">
-                  <Link
-                    href={`/booking?vehicle=${encodeURIComponent(v.name)}`}
-                    className="w-full rounded-full btn-gold py-3.5 text-xs font-bold text-center inline-flex items-center justify-center gap-2 shadow-gold"
-                  >
-                    <span>Reserve This Vehicle</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          <div className="mt-12 text-center">
-            <Link
-              href="/fleet"
-              className="inline-flex items-center gap-2 rounded-full btn-ghost-gold px-8 py-3.5 text-xs font-semibold"
-            >
-              <span>View Full Fleet Pricing &amp; Specs</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. FIRST-CLASS CABIN EXPERIENCE */}
-      <section className="mx-auto max-w-7xl px-6 py-24 lg:px-10 lg:py-32">
-        <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-          <div className="space-y-6 order-2 lg:order-1">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="space-y-6 order-2 lg:order-1"
+          >
             <div>
               <span className="text-xs uppercase tracking-[0.32em] text-gold font-bold">
                 Interior Luxury
@@ -457,7 +302,7 @@ export default function HomePage() {
               {cabinAmenities.map((a) => {
                 const Icon = a.icon;
                 return (
-                  <div key={a.title} className="glass-card p-5 rounded-2xl border border-white/5 space-y-2">
+                  <div key={a.title} className="glass-card p-5 rounded-2xl border border-white/5 space-y-2 hover:border-gold/30 transition-all">
                     <div className="grid h-10 w-10 place-items-center rounded-xl bg-gold/15 text-gold border border-gold/30">
                       <Icon className="h-5 w-5" />
                     </div>
@@ -467,9 +312,15 @@ export default function HomePage() {
                 );
               })}
             </div>
-          </div>
+          </motion.div>
 
-          <div className="relative overflow-hidden rounded-3xl border border-gold/30 aspect-[4/3] group shadow-2xl order-1 lg:order-2">
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="relative overflow-hidden rounded-3xl border border-gold/30 aspect-[4/3] group shadow-2xl order-1 lg:order-2"
+          >
             <Image
               src="/images/interior.jpg"
               alt="First class Maybach luxury limousine interior"
@@ -478,15 +329,15 @@ export default function HomePage() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0C]/80 via-transparent to-transparent" />
             <div className="absolute top-4 right-4">
-              <span className="rounded-full bg-gold text-ink px-3.5 py-1 text-[10px] font-bold uppercase tracking-wider">
+              <span className="rounded-full bg-gold text-ink px-3.5 py-1 text-[10px] font-bold uppercase tracking-wider shadow-gold">
                 First Class Cabin
               </span>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* 6. SERVICES SHOWCASE */}
+      {/* 7. SERVICES SHOWCASE */}
       <section className="border-t border-white/5 bg-[#0E0E11] py-24 lg:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-10">
           <div className="mb-16 mx-auto max-w-2xl text-center">
@@ -502,12 +353,16 @@ export default function HomePage() {
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((s) => {
+            {services.map((s, idx) => {
               const Icon = s.icon;
               return (
-                <div
+                <motion.div
                   key={s.title}
-                  className="glass-card group rounded-3xl p-7 flex flex-col justify-between transition-all duration-300 hover:border-gold/50 hover:-translate-y-1.5"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: idx * 0.08 }}
+                  className="glass-card group rounded-3xl p-7 flex flex-col justify-between transition-all duration-300 hover:border-gold/50 hover:-translate-y-1.5 shadow-xl"
                 >
                   <div>
                     <div className="flex items-center justify-between">
@@ -528,14 +383,14 @@ export default function HomePage() {
                     <span>Learn More &amp; Book</span>
                     <ArrowRight className="h-3 w-3" />
                   </Link>
-                </div>
+                </motion.div>
               );
             })}
           </div>
         </div>
       </section>
 
-      {/* 7. CLIENT TESTIMONIALS */}
+      {/* 8. CLIENT TESTIMONIALS */}
       <section className="mx-auto max-w-7xl px-6 py-24 lg:px-10 lg:py-32">
         <div className="mb-16 mx-auto max-w-2xl text-center">
           <span className="text-xs uppercase tracking-[0.32em] text-gold font-bold">
@@ -547,10 +402,14 @@ export default function HomePage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
-          {testimonials.map((t) => (
-            <blockquote
+          {testimonials.map((t, idx) => (
+            <motion.blockquote
               key={t.name}
-              className="glass-card flex flex-col justify-between rounded-3xl p-8 border border-white/5 hover:border-gold/30"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
+              className="glass-card flex flex-col justify-between rounded-3xl p-8 border border-white/5 hover:border-gold/30 transition-all shadow-xl"
             >
               <div>
                 <div className="flex gap-1 text-gold">
@@ -566,14 +425,20 @@ export default function HomePage() {
                 <p className="font-display text-lg text-white font-bold">{t.name}</p>
                 <p className="text-[11px] uppercase tracking-widest text-gold mt-0.5">{t.role}</p>
               </footer>
-            </blockquote>
+            </motion.blockquote>
           ))}
         </div>
       </section>
 
-      {/* 8. BOTTOM CTA BANNER */}
+      {/* 9. BOTTOM CTA BANNER */}
       <section className="mx-auto max-w-7xl px-6 pb-24 lg:px-10">
-        <div className="relative overflow-hidden rounded-3xl border border-gold/40 bg-gradient-to-br from-[#1C180E] via-[#141416] to-[#0B0B0C] p-10 md:p-16 shadow-2xl">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="relative overflow-hidden rounded-3xl border border-gold/40 bg-gradient-to-br from-[#1C180E] via-[#141416] to-[#0B0B0C] p-10 md:p-16 shadow-2xl"
+        >
           <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-gold/20 blur-3xl pointer-events-none animate-pulse-glow" />
           <div className="relative grid gap-10 lg:grid-cols-2 lg:items-center">
             <div>
@@ -604,7 +469,7 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
-        </div>
+        </motion.div>
       </section>
     </div>
   );
