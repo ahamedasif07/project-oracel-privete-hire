@@ -61,8 +61,8 @@ export interface Vehicle {
   features: string;
   order: number;
   isActive: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
 
 export interface DashboardStats {
@@ -72,11 +72,24 @@ export interface DashboardStats {
   completedBookings: number;
   unreadMessages: number;
   totalRevenue: number;
+  pendingRevenue?: number;
+  paidCount?: number;
+  unpaidCount?: number;
+}
+
+export interface AdminUserItem {
+  id: string;
+  username?: string;
+  email: string;
+  name: string;
+  role: string;
+  createdAt?: Date | string;
 }
 
 export interface AdminUserSession {
   id: string;
   email: string;
+  username?: string;
   name: string;
   role: string;
 }

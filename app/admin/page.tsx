@@ -15,6 +15,8 @@ import {
   Loader2,
   RefreshCw,
   TrendingUp,
+  Banknote,
+  CreditCard,
 } from "lucide-react";
 import type { DashboardStats, Booking } from "@/types";
 
@@ -53,7 +55,7 @@ export default function AdminDashboardPage() {
     <div>
       <AdminHeader
         title="Operations Dashboard"
-        description="Real-time chauffeur dispatch analytics and active booking pipeline."
+        description="Real-time chauffeur dispatch analytics, revenue collections, and live booking pipeline."
       >
         <div className="flex items-center gap-3">
           <button
@@ -76,67 +78,75 @@ export default function AdminDashboardPage() {
       <main className="p-8 space-y-8">
         {/* KPI Metric Cards */}
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="glass-card rounded-2xl p-6 border border-white/5 relative overflow-hidden">
+          {/* Card 1: Paid Revenue */}
+          <div className="glass-card rounded-2xl p-6 border border-emerald-500/30 bg-emerald-500/5 relative overflow-hidden">
             <div className="flex items-center justify-between">
-              <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+              <span className="text-xs uppercase tracking-wider text-emerald-400 font-semibold">
+                Collected Revenue (Paid)
+              </span>
+              <div className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500/20 text-emerald-400 font-bold text-sm">
+                £
+              </div>
+            </div>
+            <p className="font-display text-3xl font-bold text-emerald-300 mt-3">
+              {loading ? "-" : `£${(stats?.totalRevenue || 0).toFixed(2)}`}
+            </p>
+            <p className="text-[11px] text-emerald-400/80 mt-1 flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" />
+              <span>{stats?.paidCount || 0} journeys settled</span>
+            </p>
+          </div>
+
+          {/* Card 2: Pending Revenue */}
+          <div className="glass-card rounded-2xl p-6 border border-amber-500/30 bg-amber-500/5 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase tracking-wider text-amber-400 font-semibold">
+                Pending Payments
+              </span>
+              <div className="grid h-9 w-9 place-items-center rounded-xl bg-amber-500/20 text-amber-400">
+                <Banknote className="h-4 w-4" />
+              </div>
+            </div>
+            <p className="font-display text-3xl font-bold text-amber-300 mt-3">
+              {loading ? "-" : `£${(stats?.pendingRevenue || 0).toFixed(2)}`}
+            </p>
+            <p className="text-[11px] text-amber-400/80 mt-1">
+              {stats?.unpaidCount || 0} hand cash / uncollected
+            </p>
+          </div>
+
+          {/* Card 3: Total Bookings */}
+          <div className="glass-card rounded-2xl p-6 border border-gold/30 bg-gold/5 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase tracking-wider text-gold font-semibold">
                 Total Bookings
               </span>
               <div className="grid h-9 w-9 place-items-center rounded-xl bg-gold/10 text-gold">
                 <CalendarCheck className="h-4 w-4" />
               </div>
             </div>
-            <p className="font-display text-3xl font-bold text-white mt-3">
+            <p className="font-display text-3xl font-bold text-gradient-gold mt-3">
               {loading ? "-" : stats?.totalBookings || 0}
             </p>
-            <p className="text-[11px] text-gold mt-1 flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" />
-              <span>All recorded journeys</span>
-            </p>
+            <p className="text-[11px] text-gold/80 mt-1">All recorded reservations</p>
           </div>
 
-          <div className="glass-card rounded-2xl p-6 border border-amber-500/20 bg-amber-500/5 relative overflow-hidden">
+          {/* Card 4: Completed Journeys */}
+          <div className="glass-card rounded-2xl p-6 border border-white/5 relative overflow-hidden">
             <div className="flex items-center justify-between">
-              <span className="text-xs uppercase tracking-wider text-amber-400 font-semibold">
-                Pending Action
+              <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                Completed Journeys
               </span>
-              <div className="grid h-9 w-9 place-items-center rounded-xl bg-amber-500/15 text-amber-400">
-                <Clock className="h-4 w-4" />
-              </div>
-            </div>
-            <p className="font-display text-3xl font-bold text-amber-300 mt-3">
-              {loading ? "-" : stats?.pendingBookings || 0}
-            </p>
-            <p className="text-[11px] text-amber-400/80 mt-1">Awaiting driver assignment</p>
-          </div>
-
-          <div className="glass-card rounded-2xl p-6 border border-emerald-500/20 bg-emerald-500/5 relative overflow-hidden">
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase tracking-wider text-emerald-400 font-semibold">
-                Confirmed &amp; Live
-              </span>
-              <div className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500/15 text-emerald-400">
+              <div className="grid h-9 w-9 place-items-center rounded-xl bg-white/10 text-white">
                 <CheckCircle className="h-4 w-4" />
               </div>
             </div>
-            <p className="font-display text-3xl font-bold text-emerald-300 mt-3">
-              {loading ? "-" : stats?.confirmedBookings || 0}
+            <p className="font-display text-3xl font-bold text-white mt-3">
+              {loading ? "-" : stats?.completedBookings || 0}
             </p>
-            <p className="text-[11px] text-emerald-400/80 mt-1">Chauffeurs assigned</p>
-          </div>
-
-          <div className="glass-card rounded-2xl p-6 border border-gold/30 bg-gold/5 relative overflow-hidden">
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase tracking-wider text-gold font-semibold">
-                Gross Revenue
-              </span>
-              <div className="grid h-9 w-9 place-items-center rounded-xl bg-gold text-ink font-bold text-sm">
-                £
-              </div>
-            </div>
-            <p className="font-display text-3xl font-bold text-gradient-gold mt-3">
-              {loading ? "-" : `£${(stats?.totalRevenue || 0).toFixed(2)}`}
+            <p className="text-[11px] text-muted-foreground mt-1">
+              {stats?.pendingBookings || 0} awaiting dispatch
             </p>
-            <p className="text-[11px] text-gold/80 mt-1">From active journeys</p>
           </div>
         </div>
 
@@ -182,6 +192,7 @@ export default function AdminDashboardPage() {
                     <th className="px-6 py-4">Vehicle</th>
                     <th className="px-6 py-4">Pickup Time</th>
                     <th className="px-6 py-4">Fare</th>
+                    <th className="px-6 py-4">Payment</th>
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4 text-right">Action</th>
                   </tr>
@@ -215,6 +226,14 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="px-6 py-4 font-bold text-white">
                         £{Number(b.estimatedFare).toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge
+                          variant={b.paymentStatus === "PAID" ? "success" : "pending"}
+                          className="text-[10px] px-2 py-0.5 uppercase tracking-wider"
+                        >
+                          {b.paymentStatus === "PAID" ? "PAID ✓" : "UNPAID"}
+                        </Badge>
                       </td>
                       <td className="px-6 py-4">
                         <Badge

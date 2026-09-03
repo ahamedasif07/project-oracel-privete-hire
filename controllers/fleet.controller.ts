@@ -18,6 +18,26 @@ class FleetController {
   }
 
   /**
+   * Handles creating a new fleet vehicle (Admin Only)
+   */
+  public async createVehicle(req: NextRequest): Promise<NextResponse> {
+    try {
+      const admin = await getCurrentAdmin();
+      if (!admin) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      const body = await req.json().catch(() => ({}));
+      const vehicle = await fleetService.createVehicle(body);
+
+      return NextResponse.json({ success: true, vehicle }, { status: 201 });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to create vehicle.";
+      return NextResponse.json({ error: errorMessage }, { status: 400 });
+    }
+  }
+
+  /**
    * Handles updating vehicle pricing/specs (Admin Only)
    */
   public async updateVehicle(req: NextRequest): Promise<NextResponse> {
@@ -42,6 +62,28 @@ class FleetController {
       return NextResponse.json({ success: true, vehicle: updated });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to update vehicle.";
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
+    }
+  }
+
+  /**
+   * Handles deleting a vehicle (Admin Only)
+   */
+  public async deleteVehicle(req: NextRequest, id: string): Promise<NextResponse> {
+    try {
+      const admin = await getCurrentAdmin();
+      if (!admin) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      const deleted = await fleetService.deleteVehicle(id);
+      if (!deleted) {
+        return NextResponse.json({ error: "Vehicle not found." }, { status: 404 });
+      }
+
+      return NextResponse.json({ success: true });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete vehicle.";
       return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   }

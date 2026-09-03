@@ -7,6 +7,10 @@ export async function GET() {
   return fleetController.getFleet();
 }
 
+export async function POST(req: NextRequest) {
+  return fleetController.createVehicle(req);
+}
+
 export async function PATCH(req: NextRequest) {
   return fleetController.updateVehicle(req);
 }

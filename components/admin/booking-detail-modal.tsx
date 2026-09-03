@@ -19,6 +19,9 @@ import {
   Car,
   Loader2,
   Trash2,
+  CheckCircle2,
+  CreditCard,
+  Banknote,
 } from "lucide-react";
 import type { Booking } from "@/types";
 
@@ -45,15 +48,18 @@ export function BookingDetailModal({
 
   if (!booking) return null;
 
-  const handleSave = async () => {
+  const handleSave = async (overrideStatus?: string, overridePayment?: string) => {
     setLoading(true);
     try {
+      const finalStatus = overrideStatus || status;
+      const finalPayment = overridePayment || paymentStatus;
+
       const res = await fetch(`/api/bookings/${booking.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          status,
-          paymentStatus,
+          status: finalStatus,
+          paymentStatus: finalPayment,
           assignedDriver,
           estimatedFare: Number(estimatedFare),
           adminNotes,
@@ -100,24 +106,86 @@ export function BookingDetailModal({
                 {booking.bookingRef}
               </DialogTitle>
             </div>
-            <Badge
-              variant={
-                status === "CONFIRMED"
-                  ? "success"
-                  : status === "COMPLETED"
-                  ? "completed"
-                  : status === "CANCELLED"
-                  ? "cancelled"
-                  : "pending"
-              }
-              className="text-xs px-3 py-1 uppercase tracking-wider"
-            >
-              {status}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant={
+                  paymentStatus === "PAID" ? "success" : "pending"
+                }
+                className="text-xs px-2.5 py-0.5 uppercase tracking-wider"
+              >
+                {paymentStatus === "PAID" ? "PAID ✓" : "UNPAID"}
+              </Badge>
+              <Badge
+                variant={
+                  status === "CONFIRMED"
+                    ? "success"
+                    : status === "COMPLETED"
+                    ? "completed"
+                    : status === "CANCELLED"
+                    ? "cancelled"
+                    : "pending"
+                }
+                className="text-xs px-3 py-1 uppercase tracking-wider"
+              >
+                {status}
+              </Badge>
+            </div>
           </div>
         </DialogHeader>
 
         <div className="space-y-6 text-xs md:text-sm pt-2">
+          {/* Quick Action Bar */}
+          <div className="p-3.5 rounded-2xl bg-[#0D0D0D] border border-gold/30 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-muted-foreground">Payment Method:</span>
+              <span className="text-white font-semibold flex items-center gap-1">
+                {booking.paymentMethod === "card_pay" ? (
+                  <>
+                    <CreditCard className="h-3.5 w-3.5 text-gold" />
+                    <span>Stripe Card Online</span>
+                  </>
+                ) : (
+                  <>
+                    <Banknote className="h-3.5 w-3.5 text-emerald-400" />
+                    <span>Hand Cash (Pay Driver)</span>
+                  </>
+                )}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {paymentStatus !== "PAID" && (
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => {
+                    setPaymentStatus("PAID");
+                    handleSave(undefined, "PAID");
+                  }}
+                  className="rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/25 px-3 py-1 text-xs font-semibold inline-flex items-center gap-1 transition-all"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>Mark as Paid</span>
+                </button>
+              )}
+              {status !== "COMPLETED" && (
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => {
+                    setStatus("COMPLETED");
+                    setPaymentStatus("PAID");
+                    handleSave("COMPLETED", "PAID");
+                  }}
+                  className="rounded-full bg-gold/15 border border-gold/40 text-gold hover:bg-gold/25 px-3 py-1 text-xs font-semibold inline-flex items-center gap-1 transition-all"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>Mark as Completed &amp; Paid</span>
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Journey Section */}
           <div className="p-4 rounded-2xl bg-[#0D0D0D] border border-white/5 space-y-3">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gold flex items-center gap-1.5">
@@ -224,8 +292,8 @@ export function BookingDetailModal({
                   onChange={(e) => setPaymentStatus(e.target.value)}
                   className="w-full h-11 rounded-xl border border-white/10 bg-[#0D0D0D] px-3 text-xs text-white focus:outline-none focus:border-gold"
                 >
-                  <option value="UNPAID">UNPAID</option>
-                  <option value="PAID">PAID</option>
+                  <option value="UNPAID">UNPAID (Hand Cash pending)</option>
+                  <option value="PAID">PAID (Settled)</option>
                 </select>
               </div>
             </div>
@@ -291,7 +359,7 @@ export function BookingDetailModal({
             <button
               type="button"
               disabled={loading}
-              onClick={handleSave}
+              onClick={() => handleSave()}
               className="rounded-full btn-gold px-7 py-2.5 text-xs font-semibold shadow-gold inline-flex items-center gap-1.5"
             >
               {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}

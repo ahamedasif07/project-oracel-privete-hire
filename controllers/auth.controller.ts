@@ -79,6 +79,66 @@ class AuthController {
       return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   }
+
+  /**
+   * Returns all admin users (Admin Only)
+   */
+  public async getAdmins(): Promise<NextResponse> {
+    try {
+      const admin = await getCurrentAdmin();
+      if (!admin) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      const admins = await authService.getAllAdmins();
+      return NextResponse.json({ admins });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to fetch admin accounts.";
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
+    }
+  }
+
+  /**
+   * Creates a new admin user (Admin Only)
+   */
+  public async createAdmin(req: NextRequest): Promise<NextResponse> {
+    try {
+      const admin = await getCurrentAdmin();
+      if (!admin) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      const body = await req.json().catch(() => ({}));
+      const newAdmin = await authService.createAdmin(body);
+
+      return NextResponse.json({ success: true, admin: newAdmin }, { status: 201 });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to create admin user.";
+      return NextResponse.json({ error: errorMessage }, { status: 400 });
+    }
+  }
+
+  /**
+   * Deletes an admin user (Admin Only)
+   */
+  public async deleteAdmin(req: NextRequest, id: string): Promise<NextResponse> {
+    try {
+      const admin = await getCurrentAdmin();
+      if (!admin) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      const deleted = await authService.deleteAdmin(id);
+      if (!deleted) {
+        return NextResponse.json({ error: "Admin user not found." }, { status: 404 });
+      }
+
+      return NextResponse.json({ success: true });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete admin user.";
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
+    }
+  }
 }
 
 export const authController = new AuthController();

@@ -139,6 +139,7 @@ export default function AdminBookingsPage() {
                     <th className="px-6 py-4">Vehicle Tier</th>
                     <th className="px-6 py-4">Pickup Schedule</th>
                     <th className="px-6 py-4">Fare</th>
+                    <th className="px-6 py-4">Payment</th>
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
@@ -187,6 +188,14 @@ export default function AdminBookingsPage() {
                       </td>
                       <td className="px-6 py-4 font-bold text-white">
                         £{Number(b.estimatedFare).toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge
+                          variant={b.paymentStatus === "PAID" ? "success" : "pending"}
+                          className="text-[10px] px-2 py-0.5 uppercase tracking-wider"
+                        >
+                          {b.paymentStatus === "PAID" ? "PAID ✓" : "UNPAID"}
+                        </Badge>
                       </td>
                       <td className="px-6 py-4">
                         <Badge

@@ -12,6 +12,7 @@ import {
   LogOut,
   ExternalLink,
   Shield,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck },
   { href: "/admin/messages", label: "Contact Inbox", icon: Mail },
   { href: "/admin/fleet", label: "Fleet Vehicles", icon: Car },
+  { href: "/admin/admins", label: "Administrators", icon: Users },
   { href: "/admin/settings", label: "SMTP & Settings", icon: Settings },
 ];
 
