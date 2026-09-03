@@ -44,6 +44,7 @@ export interface ContactMessage {
   message: string;
   isRead: boolean;
   createdAt: Date | string;
+  updatedAt?: Date | string;
 }
 
 export interface Vehicle {
