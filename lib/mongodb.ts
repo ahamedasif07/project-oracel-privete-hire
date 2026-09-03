@@ -33,7 +33,7 @@ export async function connectDB(): Promise<typeof mongoose> {
   if (!cached?.promise) {
     const opts: mongoose.ConnectOptions = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 10000, // 10s timeout instead of hanging indefinitely
+      serverSelectionTimeoutMS: 4000, // 4s timeout for fast failover
       socketTimeoutMS: 45000,
     };
 

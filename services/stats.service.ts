@@ -1,6 +1,8 @@
 import { connectDB } from "@/lib/mongodb";
 import { Booking } from "@/models/Booking";
 import { ContactMessage } from "@/models/ContactMessage";
+import { bookingService } from "./booking.service";
+import { contactService } from "./contact.service";
 import type { DashboardStats, Booking as IBookingType } from "@/types";
 
 class StatsService {
@@ -49,18 +51,30 @@ class StatsService {
         stats,
         recentBookings: recentBookings.map((b) => b.toJSON()) as unknown as IBookingType[],
       };
-    } catch (err: any) {
-      console.warn("⚠️ [StatsService] Returning baseline metrics due to DB status:", err.message);
+    } catch {
+      // Compute dynamically from local bookings and contact messages
+      const bookings = await bookingService.getBookings();
+      const messages = await contactService.getContactMessages();
+
+      const totalBookings = bookings.length;
+      const pendingBookings = bookings.filter((b) => b.status === "PENDING").length;
+      const confirmedBookings = bookings.filter((b) => b.status === "CONFIRMED").length;
+      const completedBookings = bookings.filter((b) => b.status === "COMPLETED").length;
+      const totalRevenue = bookings
+        .filter((b) => b.status !== "CANCELLED")
+        .reduce((acc, b) => acc + (Number(b.estimatedFare) || 0), 0);
+      const unreadMessages = messages.filter((m) => !m.isRead).length;
+
       return {
         stats: {
-          totalBookings: 0,
-          pendingBookings: 0,
-          confirmedBookings: 0,
-          completedBookings: 0,
-          unreadMessages: 0,
-          totalRevenue: 0,
+          totalBookings,
+          pendingBookings,
+          confirmedBookings,
+          completedBookings,
+          unreadMessages,
+          totalRevenue,
         },
-        recentBookings: [],
+        recentBookings: bookings.slice(0, 6),
       };
     }
   }
