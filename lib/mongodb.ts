@@ -18,23 +18,36 @@ if (!cached) {
   cached = globalThis.mongooseCache = { conn: null, promise: null };
 }
 
-export async function connectDB() {
-  if (cached?.conn) {
+export async function connectDB(): Promise<typeof mongoose> {
+  // If connection is already open (readyState === 1), return it
+  if (cached?.conn && mongoose.connection.readyState === 1) {
     return cached.conn;
   }
 
   if (!MONGODB_URI) {
-    throw new Error("Please define the MONGODB_URI environment variable inside .env");
+    const errorMsg = "MongoDB connection string is not configured. Please set MONGODB_URI in .env";
+    console.error("❌ [MongoDB Error]:", errorMsg);
+    throw new Error(errorMsg);
   }
 
   if (!cached?.promise) {
-    const opts = {
+    const opts: mongoose.ConnectOptions = {
       bufferCommands: false,
+      serverSelectionTimeoutMS: 10000, // 10s timeout instead of hanging indefinitely
+      socketTimeoutMS: 45000,
     };
 
-    cached!.promise = mongoose.connect(MONGODB_URI, opts).then((m) => {
-      return m;
-    });
+    cached!.promise = mongoose
+      .connect(MONGODB_URI, opts)
+      .then((m) => {
+        console.log(" Connected to MongoDB successfully.");
+        return m;
+      })
+      .catch((err) => {
+        cached!.promise = null;
+        console.error("❌ MongoDB connection error:", err.message);
+        throw err;
+      });
   }
 
   try {

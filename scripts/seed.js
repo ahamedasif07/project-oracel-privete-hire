@@ -29,6 +29,7 @@ if (!MONGODB_URI) {
 // Schemas
 const AdminUserSchema = new mongoose.Schema(
   {
+    username: { type: String, unique: true, sparse: true, index: true },
     email: { type: String, required: true, unique: true },
     passwordHash: { type: String, required: true },
     name: { type: String, default: "Admin" },
@@ -73,21 +74,23 @@ async function seed() {
   console.log("Connected to MongoDB database.");
 
   // 1. Seed Admin User
-  const adminEmail = process.env.ADMIN_EMAIL || "admin@oracleprivatehire.co.uk";
-  const rawPassword = process.env.ADMIN_PASSWORD || "admin123456";
+  const adminEmail = (process.env.ADMIN_EMAIL || "rxasif31@gmail.com").toLowerCase().trim();
+  const adminUsername = (process.env.ADMIN_USERNAME || "admin").toLowerCase().trim();
+  const rawPassword = process.env.ADMIN_PASSWORD || "123456";
   const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
   await AdminUser.findOneAndUpdate(
-    { email: adminEmail },
+    { $or: [{ email: adminEmail }, { username: adminUsername }] },
     {
       email: adminEmail,
+      username: adminUsername,
       name: "Oracle Admin",
       passwordHash: hashedPassword,
       role: "SUPER_ADMIN",
     },
     { upsert: true, new: true }
   );
-  console.log(`Admin user seeded: ${adminEmail} (password: ${rawPassword})`);
+  console.log(`Admin user seeded: username=${adminUsername}, email=${adminEmail} (password: ${rawPassword})`);
 
   // 2. Seed Fleet Vehicles
   const vehicles = [

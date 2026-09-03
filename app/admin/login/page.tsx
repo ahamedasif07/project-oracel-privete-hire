@@ -2,19 +2,27 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { Lock, Mail, Loader2, ShieldCheck, ArrowRight } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Lock, User, Loader2, ShieldCheck, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@oracleprivatehire.co.uk");
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get("redirect") || "/admin";
+
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!identifier.trim() || !password.trim()) {
+      setError("Please enter your username/email and password.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -22,18 +30,31 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier: identifier.trim(), password: password.trim() }),
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Invalid credentials.");
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch {
+        if (!res.ok) {
+          throw new Error(`Server returned status ${res.status}`);
+        }
       }
 
-      router.push("/admin");
+      if (!res.ok) {
+        throw new Error(data.error || "Invalid username/email or password.");
+      }
+
+      router.push(redirectPath);
       router.refresh();
     } catch (err: any) {
-      setError(err.message || "Failed to sign in.");
+      console.error("Login attempt failed:", err);
+      if (err.message && err.message.includes("fetch")) {
+        setError("Unable to connect to the server. Please ensure database connection is active.");
+      } else {
+        setError(err.message || "Failed to sign in. Please verify your credentials.");
+      }
     } finally {
       setLoading(false);
     }
@@ -73,17 +94,19 @@ export default function AdminLoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 font-medium">
-              Administrator Email
+              Username or Email
             </label>
             <div className="relative">
               <Input
-                type="email"
-                placeholder="admin@oracleprivatehire.co.uk"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                placeholder="admin or rxasif31@gmail.com"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 required
+                autoComplete="username"
+                autoFocus
               />
-              <Mail className="absolute right-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
+              <User className="absolute right-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
             </div>
           </div>
 
@@ -98,6 +121,7 @@ export default function AdminLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="current-password"
               />
               <Lock className="absolute right-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
             </div>
@@ -106,7 +130,7 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-full btn-gold py-3.5 text-sm font-semibold shadow-gold inline-flex items-center justify-center gap-2 mt-4"
+            className="w-full rounded-full btn-gold py-3.5 text-sm font-semibold shadow-gold inline-flex items-center justify-center gap-2 mt-4 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
           >
             {loading ? (
               <>
