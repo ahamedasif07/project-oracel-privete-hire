@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   Plane,
@@ -19,6 +20,10 @@ import {
   ShieldCheck,
   AlertCircle,
   Navigation,
+  X,
+  Home,
+  RotateCcw,
+  PhoneCall,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -1118,8 +1123,42 @@ export function BookingWizard() {
 
       {/* STEP 5: INSTANT CONFIRMATION */}
       {currentStep === 5 && submittedBooking && (
-        <div className="glass-card rounded-3xl p-8 md:p-12 border border-gold/40 shadow-2xl text-center animate-fade-up max-w-2xl mx-auto">
-          <div className="grid h-16 w-16 place-items-center rounded-full bg-gold text-ink mx-auto mb-6 shadow-gold">
+        <div className="relative glass-card rounded-3xl p-8 md:p-12 border border-gold/40 shadow-2xl text-center animate-fade-up max-w-2xl mx-auto">
+          {/* Top-Right Cross (X) Close Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setCurrentStep(1);
+              setSubmittedBooking(null);
+              setPickupAddress("");
+              setDropoffAddress("");
+              setViaAddress("");
+              setPickupCoords(null);
+              setDropoffCoords(null);
+              setViaCoords(null);
+              setRouteDistanceMiles(null);
+              setSelectedAirportAddon(null);
+              setFlightNumber("");
+              setSpecialRequests("");
+            }}
+            className="absolute top-5 right-5 grid h-10 w-10 place-items-center rounded-full bg-white/5 hover:bg-gold/20 border border-white/10 hover:border-gold/40 text-muted-foreground hover:text-gold transition-all duration-300"
+            title="Close / New Booking"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          {/* Top-Left Back to Form / Home Button */}
+          <Link
+            href="/"
+            className="absolute top-5 left-5 inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-muted-foreground hover:text-white transition-all duration-300"
+            title="Back to Home"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Home</span>
+          </Link>
+
+          <div className="grid h-16 w-16 place-items-center rounded-full bg-gold text-ink mx-auto mb-6 shadow-gold mt-2 sm:mt-0">
             <CheckCircle2 className="h-8 w-8" />
           </div>
 
@@ -1201,7 +1240,7 @@ export function BookingWizard() {
             </div>
           </div>
 
-          <div className="mt-8 flex justify-center gap-4 flex-wrap">
+          <div className="mt-8 flex justify-center gap-3.5 flex-wrap">
             <button
               type="button"
               onClick={() => {
@@ -1209,20 +1248,35 @@ export function BookingWizard() {
                 setSubmittedBooking(null);
                 setPickupAddress("");
                 setDropoffAddress("");
+                setViaAddress("");
                 setPickupCoords(null);
                 setDropoffCoords(null);
+                setViaCoords(null);
                 setRouteDistanceMiles(null);
                 setSelectedAirportAddon(null);
+                setFlightNumber("");
+                setSpecialRequests("");
               }}
-              className="rounded-full btn-gold px-8 py-3.5 text-xs font-semibold"
+              className="rounded-full btn-gold px-7 py-3.5 text-xs font-semibold shadow-gold inline-flex items-center gap-2"
             >
-              Book Another Journey
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span>Book Another Journey</span>
             </button>
+
+            <Link
+              href="/"
+              className="rounded-full btn-ghost-gold px-7 py-3.5 text-xs font-semibold inline-flex items-center gap-2"
+            >
+              <Home className="h-3.5 w-3.5 text-gold" />
+              <span>Back to Home</span>
+            </Link>
+
             <a
               href="tel:07456714214"
-              className="rounded-full btn-ghost-gold px-8 py-3.5 text-xs font-semibold"
+              className="rounded-full btn-ghost-gold px-6 py-3.5 text-xs font-semibold inline-flex items-center gap-2"
             >
-              Call 07456714214
+              <PhoneCall className="h-3.5 w-3.5 text-gold" />
+              <span>Call 24/7 Dispatch</span>
             </a>
           </div>
         </div>
