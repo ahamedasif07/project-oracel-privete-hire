@@ -220,8 +220,9 @@ export function ManualBookingModal({
                 onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
                 className="w-full h-12 rounded-xl border border-white/10 bg-[#0D0D0D] px-3 text-xs text-white focus:outline-none focus:border-gold"
               >
-                <option value="cash_to_driver">Cash / Card to Driver</option>
-                <option value="pay_online">Pay Online Link</option>
+                <option value="cash_to_driver">Hand Cash (Pay Driver)</option>
+                <option value="card_pay">Card Pay (Stripe Online)</option>
+                <option value="pay_online">Pre-Pay Online Link</option>
                 <option value="invoice">Corporate Invoice</option>
               </select>
             </div>

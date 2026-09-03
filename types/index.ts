@@ -1,6 +1,6 @@
 export type BookingStatus = "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
 export type PaymentStatus = "UNPAID" | "PAID";
-export type PaymentMethod = "cash_to_driver" | "pay_online" | "invoice";
+export type PaymentMethod = "cash_to_driver" | "card_pay" | "pay_online" | "invoice";
 
 export interface Booking {
   id: string;
