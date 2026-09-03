@@ -1,0 +1,19 @@
+[
+  {
+    "id": "admin_master_1",
+    "name": "Oracle Master Admin",
+    "username": "admin",
+    "email": "rxasif31@gmail.com",
+    "role": "SUPER_ADMIN",
+    "createdAt": "2026-09-03T04:16:43.185Z"
+  },
+  {
+    "id": "adm_1788409003133_8ikh",
+    "name": "Operations Manager",
+    "username": "ops_manager",
+    "email": "ops@oracleprivatehire.co.uk",
+    "role": "ADMIN",
+    "passwordHash": "$2a$10$zeb7.plnZJvaQJ5HtnZgsutaxtRoVY.cWaaf4TT0ot4Mrlz1r.mAK",
+    "createdAt": "2026-09-03T04:16:43.133Z"
+  }
+]

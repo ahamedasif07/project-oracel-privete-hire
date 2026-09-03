@@ -24,12 +24,12 @@
     "specialRequests": "dhbsdbshb",
     "estimatedFare": 80,
     "paymentMethod": "card_pay",
-    "status": "CONFIRMED",
+    "status": "COMPLETED",
     "paymentStatus": "PAID",
     "adminNotes": "Stripe Payment Verified. Session: cs_test_a17I6uWU3ndTCzWXJY71uILDeRPPBKarbjLJpS8g0WNgZKhW8kBhfRv8wd. Amount: £80.00",
     "assignedDriver": null,
     "createdAt": "2026-09-03T04:06:40.499Z",
-    "updatedAt": "2026-09-03T04:07:26.419Z"
+    "updatedAt": "2026-09-03T04:16:42.739Z"
   },
   {
     "id": "bk_1788408204961_oeusn",
