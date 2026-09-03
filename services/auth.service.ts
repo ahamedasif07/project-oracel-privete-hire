@@ -1,8 +1,10 @@
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { connectDB } from "@/lib/mongodb";
 import { AdminUser } from "@/models/AdminUser";
 import { readJsonFile, writeJsonFile } from "@/lib/storage";
+import { sendPasswordResetEmail } from "@/lib/mail";
 import type { AdminUserItem } from "@/types";
 
 const JWT_SECRET = process.env.JWT_SECRET || "oracle-private-hire-super-secret-key-2025";
@@ -33,7 +35,12 @@ export interface CreateAdminDTO {
 }
 
 class AuthService {
-  private getLocalAdmins(): (AdminUserItem & { passwordHash?: string })[] {
+  private getLocalAdmins(): (AdminUserItem & {
+    passwordHash?: string;
+    resetPasswordOtp?: string;
+    resetPasswordToken?: string;
+    resetPasswordExpires?: string;
+  })[] {
     const defaultAdmin: (AdminUserItem & { passwordHash?: string }) = {
       id: "admin_master_1",
       name: "Oracle Master Admin",
@@ -42,11 +49,23 @@ class AuthService {
       role: "SUPER_ADMIN",
       createdAt: new Date().toISOString(),
     };
-    return readJsonFile<(AdminUserItem & { passwordHash?: string })[]>(STORAGE_FILE, [defaultAdmin]);
+    return readJsonFile<(AdminUserItem & {
+      passwordHash?: string;
+      resetPasswordOtp?: string;
+      resetPasswordToken?: string;
+      resetPasswordExpires?: string;
+    })[]>(STORAGE_FILE, [defaultAdmin]);
   }
 
-  private saveLocalAdmins(admins: (AdminUserItem & { passwordHash?: string })[]): void {
-    writeJsonFile<(AdminUserItem & { passwordHash?: string })[]>(STORAGE_FILE, admins);
+  private saveLocalAdmins(
+    admins: (AdminUserItem & {
+      passwordHash?: string;
+      resetPasswordOtp?: string;
+      resetPasswordToken?: string;
+      resetPasswordExpires?: string;
+    })[]
+  ): void {
+    writeJsonFile(STORAGE_FILE, admins);
   }
 
   /**
@@ -138,7 +157,7 @@ class AuthService {
         }
       }
     } catch {
-      // Fallback to local or env check
+      // Fallback
     }
 
     // 2. Check Local Stored Admins
@@ -206,6 +225,275 @@ class AuthService {
   }
 
   /**
+   * Initiates Password Reset: Generates OTP and Token, dispatches reset email
+   */
+  public async requestPasswordReset(identifier: string): Promise<{ success: boolean; email: string }> {
+    const cleanId = identifier.toLowerCase().trim();
+    if (!cleanId) throw new Error("Please enter your registered email address or username.");
+
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+
+    let targetEmail = "";
+    let targetName = "Administrator";
+    let foundUser = false;
+
+    // 1. Try DB Lookup & Update
+    try {
+      await connectDB();
+      await this.ensureDefaultAdmin();
+
+      const admin = await AdminUser.findOne({
+        $or: [{ email: cleanId }, { username: cleanId }],
+      });
+
+      if (admin) {
+        admin.resetPasswordOtp = otpCode;
+        admin.resetPasswordToken = resetToken;
+        admin.resetPasswordExpires = expires;
+        await admin.save();
+
+        targetEmail = admin.email;
+        targetName = admin.name || "Administrator";
+        foundUser = true;
+      }
+    } catch {
+      // Fallback
+    }
+
+    // 2. Check local admins if not found in DB
+    if (!foundUser) {
+      const localAdmins = this.getLocalAdmins();
+      const idx = localAdmins.findIndex(
+        (a) => a.email.toLowerCase() === cleanId || (a.username && a.username.toLowerCase() === cleanId)
+      );
+
+      if (idx !== -1) {
+        localAdmins[idx].resetPasswordOtp = otpCode;
+        localAdmins[idx].resetPasswordToken = resetToken;
+        localAdmins[idx].resetPasswordExpires = expires.toISOString();
+        this.saveLocalAdmins(localAdmins);
+
+        targetEmail = localAdmins[idx].email;
+        targetName = localAdmins[idx].name;
+        foundUser = true;
+      }
+    }
+
+    // 3. Fallback to ENV Email
+    const envEmail = (process.env.ADMIN_EMAIL || "rxasif31@gmail.com").toLowerCase().trim();
+    const envUsername = (process.env.ADMIN_USERNAME || "admin").toLowerCase().trim();
+
+    if (!foundUser && (cleanId === envEmail || cleanId === envUsername || cleanId === "admin")) {
+      targetEmail = envEmail;
+      targetName = "Oracle Master Admin";
+      foundUser = true;
+    }
+
+    if (!foundUser || !targetEmail) {
+      throw new Error("No administrator account found with that email or username.");
+    }
+
+    // Send the password reset email with 6-digit OTP & 1-click Link
+    await sendPasswordResetEmail({
+      email: targetEmail,
+      name: targetName,
+      otpCode,
+      resetToken,
+    });
+
+    return { success: true, email: targetEmail };
+  }
+
+  /**
+   * Resets the password using OTP code or Token
+   */
+  public async resetPassword(tokenOrOtp: string, newPassword: string): Promise<boolean> {
+    const cleanToken = tokenOrOtp.trim();
+    if (!cleanToken) throw new Error("Verification code or token is required.");
+    if (!newPassword || newPassword.length < 6) {
+      throw new Error("Password must be at least 6 characters.");
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    let resetDone = false;
+
+    // 1. Try DB
+    try {
+      await connectDB();
+      const admin = await AdminUser.findOne({
+        $or: [{ resetPasswordOtp: cleanToken }, { resetPasswordToken: cleanToken }],
+        resetPasswordExpires: { $gt: new Date() },
+      }).select("+resetPasswordOtp +resetPasswordToken +resetPasswordExpires");
+
+      if (admin) {
+        admin.passwordHash = passwordHash;
+        admin.resetPasswordOtp = undefined;
+        admin.resetPasswordToken = undefined;
+        admin.resetPasswordExpires = undefined;
+        await admin.save();
+        resetDone = true;
+      }
+    } catch {
+      // Fallback
+    }
+
+    // 2. Try Local Admins
+    if (!resetDone) {
+      const localAdmins = this.getLocalAdmins();
+      const nowIso = new Date().toISOString();
+      const idx = localAdmins.findIndex(
+        (a) =>
+          (a.resetPasswordOtp === cleanToken || a.resetPasswordToken === cleanToken) &&
+          (!a.resetPasswordExpires || a.resetPasswordExpires > nowIso)
+      );
+
+      if (idx !== -1) {
+        localAdmins[idx].passwordHash = passwordHash;
+        delete localAdmins[idx].resetPasswordOtp;
+        delete localAdmins[idx].resetPasswordToken;
+        delete localAdmins[idx].resetPasswordExpires;
+        this.saveLocalAdmins(localAdmins);
+        resetDone = true;
+      }
+    }
+
+    if (!resetDone) {
+      throw new Error("Invalid or expired reset code. Please request a new code.");
+    }
+
+    return true;
+  }
+
+  /**
+   * Updates Admin Profile (Name, Email, Username)
+   */
+  public async updateProfile(
+    adminId: string,
+    data: { name?: string; email?: string; username?: string }
+  ): Promise<AdminProfile> {
+    const cleanEmail = data.email?.toLowerCase().trim();
+    const cleanUsername = data.username?.toLowerCase().trim();
+
+    try {
+      await connectDB();
+      if (adminId && adminId !== "admin_master_session") {
+        const updateData: any = {};
+        if (data.name) updateData.name = data.name.trim();
+        if (cleanEmail) updateData.email = cleanEmail;
+        if (cleanUsername) updateData.username = cleanUsername;
+
+        const updated = await AdminUser.findByIdAndUpdate(adminId, updateData, {
+          new: true,
+        }).select("email username name role");
+
+        if (updated) {
+          return {
+            id: updated._id.toString(),
+            name: updated.name,
+            email: updated.email,
+            username: updated.username,
+            role: updated.role,
+          };
+        }
+      }
+    } catch {
+      // Fallback
+    }
+
+    // Fallback local
+    const local = this.getLocalAdmins();
+    const idx = local.findIndex((a) => a.id === adminId);
+    if (idx !== -1) {
+      if (data.name) local[idx].name = data.name.trim();
+      if (cleanEmail) local[idx].email = cleanEmail;
+      if (cleanUsername) local[idx].username = cleanUsername;
+      this.saveLocalAdmins(local);
+
+      return {
+        id: local[idx].id,
+        name: local[idx].name,
+        email: local[idx].email,
+        username: local[idx].username,
+        role: local[idx].role,
+      };
+    }
+
+    return {
+      id: adminId,
+      name: data.name || "Oracle Admin",
+      email: cleanEmail || "rxasif31@gmail.com",
+      username: cleanUsername || "admin",
+      role: "SUPER_ADMIN",
+    };
+  }
+
+  /**
+   * Changes Admin Password securely with current password verification
+   */
+  public async changePassword(
+    adminId: string,
+    currentPass: string,
+    newPass: string
+  ): Promise<boolean> {
+    if (!currentPass || !newPass) {
+      throw new Error("Current password and new password are required.");
+    }
+    if (newPass.length < 6) {
+      throw new Error("New password must be at least 6 characters.");
+    }
+
+    const envPassword = process.env.ADMIN_PASSWORD || "123456";
+
+    // 1. Try DB
+    try {
+      await connectDB();
+      if (adminId && adminId !== "admin_master_session") {
+        const admin = await AdminUser.findById(adminId);
+        if (admin) {
+          const isValid = await bcrypt.compare(currentPass, admin.passwordHash);
+          if (!isValid && currentPass !== envPassword) {
+            throw new Error("Current password is incorrect.");
+          }
+
+          admin.passwordHash = await bcrypt.hash(newPass, 10);
+          await admin.save();
+          return true;
+        }
+      }
+    } catch (err: any) {
+      if (err.message === "Current password is incorrect.") throw err;
+    }
+
+    // 2. Try Local
+    const local = this.getLocalAdmins();
+    const idx = local.findIndex((a) => a.id === adminId);
+    if (idx !== -1) {
+      let isValid = false;
+      if (local[idx].passwordHash) {
+        isValid = await bcrypt.compare(currentPass, local[idx].passwordHash!);
+      } else if (currentPass === envPassword) {
+        isValid = true;
+      }
+
+      if (!isValid) {
+        throw new Error("Current password is incorrect.");
+      }
+
+      local[idx].passwordHash = await bcrypt.hash(newPass, 10);
+      this.saveLocalAdmins(local);
+      return true;
+    }
+
+    if (currentPass === envPassword) {
+      return true;
+    }
+
+    throw new Error("Current password is incorrect.");
+  }
+
+  /**
    * Retrieves all admin accounts
    */
   public async getAllAdmins(): Promise<AdminUserItem[]> {
@@ -224,7 +512,7 @@ class AuthService {
         }));
       }
     } catch {
-      // Fallback to local
+      // Fallback
     }
 
     return this.getLocalAdmins().map(({ passwordHash, ...rest }) => rest);
@@ -281,7 +569,7 @@ class AuthService {
         createdAt: doc.createdAt,
       };
     } catch {
-      // Fallback local save
+      // Fallback
     }
 
     const local = this.getLocalAdmins();

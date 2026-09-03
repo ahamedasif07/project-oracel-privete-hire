@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Lock, User, Loader2, ShieldCheck, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -111,9 +112,17 @@ export default function AdminLoginPage() {
           </div>
 
           <div>
-            <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 font-medium">
-              Password
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                Password
+              </label>
+              <Link
+                href="/admin/forgot-password"
+                className="text-[11px] text-gold/80 hover:text-gold hover:underline transition-colors font-medium"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <div className="relative">
               <Input
                 type="password"

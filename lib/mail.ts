@@ -59,11 +59,12 @@ export async function createTransporter(config?: SmtpConfig) {
 
   // 1. Google Cloud Console OAuth2
   if (conf.oauthClientId && conf.oauthClientSecret && conf.oauthRefreshToken) {
+    const oauthUser = process.env.GMAIL_USER || conf.user || "rxasif31@gmail.com";
     return nodemailer.createTransport({
       service: "gmail",
       auth: {
         type: "OAuth2",
-        user: conf.user,
+        user: oauthUser,
         clientId: conf.oauthClientId,
         clientSecret: conf.oauthClientSecret,
         refreshToken: conf.oauthRefreshToken,
@@ -462,6 +463,79 @@ export async function sendContactEmails(contact: {
   return { success: true };
 }
 
+export async function sendPasswordResetEmail(params: {
+  email: string;
+  name: string;
+  otpCode: string;
+  resetToken: string;
+}) {
+  const { email, name, otpCode, resetToken } = params;
+  const config = await getSmtpConfig();
+  const transporter = await createTransporter(config);
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const resetLink = `${appUrl}/admin/reset-password?token=${encodeURIComponent(resetToken)}&email=${encodeURIComponent(email)}`;
+
+  const resetHtml = `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Reset Request</title>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #08080A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #FFFFFF;">
+    <div style="width: 100%; background-color: #08080A; padding: 30px 10px;">
+      <div style="max-width: 580px; margin: 0 auto; background-color: #121216; border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 20px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.9);">
+        <!-- Header -->
+        <div style="background: linear-gradient(180deg, #1C1910 0%, #121216 100%); padding: 35px 25px 25px; text-align: center; border-bottom: 1px solid rgba(212, 175, 55, 0.25);">
+          <h1 style="color: #D4AF37; font-size: 22px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin: 0;">ORACLE PRIVATE HIRE</h1>
+          <p style="color: #8E8E98; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 5px;">Admin Security &amp; Authentication</p>
+        </div>
+
+        <div style="padding: 30px 25px;">
+          <h2 style="font-size: 18px; font-weight: 700; color: #FFFFFF; margin: 0 0 10px;">Hello ${name},</h2>
+          <p style="color: #A8A8B3; font-size: 13px; line-height: 1.6; margin: 0 0 20px;">
+            We received a request to reset your administrator password for Oracle Private Hire. Use the 6-digit verification code below or click the direct reset button:
+          </p>
+
+          <!-- 6-digit OTP Code Box -->
+          <div style="background: linear-gradient(135deg, #241F14 0%, #17171C 100%); border: 1px solid #D4AF37; border-radius: 14px; padding: 20px; text-align: center; margin: 20px 0;">
+            <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #D4AF37; font-weight: 700; display: block; margin-bottom: 6px;">Your 6-Digit Verification Code</span>
+            <div style="font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #FFFFFF; font-family: monospace;">${otpCode}</div>
+            <span style="font-size: 11px; color: #9E9EA8; display: block; margin-top: 6px;">Valid for the next 15 minutes</span>
+          </div>
+
+          <!-- 1-Click Reset Link Button -->
+          <div style="text-align: center; margin: 25px 0;">
+            <a href="${resetLink}" style="display: inline-block; background: linear-gradient(135deg, #F4E0A5 0%, #D4AF37 50%, #AA820A 100%); color: #08080A; font-weight: 800; font-size: 13px; text-decoration: none; padding: 14px 28px; border-radius: 50px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 10px 30px rgba(212,175,55,0.4);">
+              Reset Password Online &rarr;
+            </a>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.03); border-left: 3px solid #D4AF37; padding: 12px 16px; border-radius: 0 8px 8px 0; margin-top: 20px; font-size: 12px; color: #9E9EA7; line-height: 1.5;">
+            <strong>Security Notice:</strong> If you did not request this password reset, please ignore this email or notify your system administrator immediately. Your password will remain unchanged.
+          </div>
+        </div>
+
+        <div style="background-color: #0A0A0D; padding: 18px 20px; text-align: center; font-size: 11px; color: #6E6E78; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+          <p style="margin: 0;">&copy; Oracle Private Hire United Kingdom &middot; Security Protocol</p>
+        </div>
+      </div>
+    </div>
+  </body>
+  </html>
+  `;
+
+  await transporter.sendMail({
+    from: config.from,
+    to: email,
+    subject: `🔐 Password Reset Request [Code: ${otpCode}] — Oracle Private Hire Admin`,
+    html: resetHtml,
+  });
+
+  return { success: true };
+}
+
 export async function sendTestEmail(testRecipient: string, customConfig?: SmtpConfig) {
   const config = customConfig || (await getSmtpConfig());
   const transporter = await createTransporter(config);
@@ -481,3 +555,5 @@ export async function sendTestEmail(testRecipient: string, customConfig?: SmtpCo
 
   return info;
 }
+
+

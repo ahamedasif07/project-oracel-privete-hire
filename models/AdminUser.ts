@@ -6,6 +6,9 @@ export interface IAdminUser extends Document {
   passwordHash: string;
   name: string;
   role: string;
+  resetPasswordOtp?: string;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,6 +20,9 @@ const AdminUserSchema: Schema = new Schema(
     passwordHash: { type: String, required: true },
     name: { type: String, default: "Admin" },
     role: { type: String, default: "ADMIN" },
+    resetPasswordOtp: { type: String, select: false },
+    resetPasswordToken: { type: String, select: false },
+    resetPasswordExpires: { type: Date, select: false },
   },
   {
     timestamps: true,
@@ -26,6 +32,9 @@ const AdminUserSchema: Schema = new Schema(
         ret.id = ret._id.toString();
         delete ret.__v;
         delete ret.passwordHash;
+        delete ret.resetPasswordOtp;
+        delete ret.resetPasswordToken;
+        delete ret.resetPasswordExpires;
         return ret;
       },
     },
