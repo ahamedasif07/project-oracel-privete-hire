@@ -1,0 +1,140 @@
+/* ==========================================================================
+   Oracle Private Hire — Custom styles (design tokens + utilities)
+   Tailwind CDN handles the utility grid; this file recreates the
+   bespoke tokens/utilities from the original design (gradients,
+   glass cards, gold buttons, animations, fonts).
+   ========================================================================== */
+
+:root {
+  --radius: 0.75rem;
+
+  /* Luxury black & gold palette */
+  --ink: oklch(0.145 0 0);           /* #0D0D0D */
+  --onyx: oklch(0.20 0 0);
+  --gold: oklch(0.78 0.13 85);        /* #D4AF37 */
+  --gold-soft: oklch(0.88 0.09 88);
+  --gold-deep: oklch(0.62 0.13 78);   /* #CFA64A */
+
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.19 0 0);
+  --muted-foreground: oklch(0.72 0 0);
+  --border: oklch(1 0 0 / 10%);
+
+  --gradient-gold: linear-gradient(135deg, oklch(0.88 0.09 88), oklch(0.68 0.13 80));
+  --shadow-gold: 0 20px 60px -20px oklch(0.78 0.13 85 / 0.35);
+  --shadow-elegant: 0 30px 80px -30px oklch(0 0 0 / 0.6);
+}
+
+* { border-color: var(--border); }
+html { scroll-behavior: smooth; }
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4, h5 {
+  font-family: "Playfair Display", ui-serif, Georgia, serif;
+  letter-spacing: -0.02em;
+}
+::selection { background: var(--gold); color: var(--ink); }
+
+.font-display { font-family: "Playfair Display", ui-serif, Georgia, serif; }
+
+/* Gradient gold text */
+.text-gradient-gold {
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Solid gold button */
+.btn-gold {
+  background: var(--gradient-gold);
+  color: var(--ink);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: all 0.35s cubic-bezier(.2,.8,.2,1);
+  box-shadow: var(--shadow-gold);
+  display: inline-flex;
+}
+.btn-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 30px 80px -20px oklch(0.78 0.13 85 / 0.5);
+}
+.btn-gold:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+/* Ghost gold button */
+.btn-ghost-gold {
+  border: 1px solid oklch(0.78 0.13 85 / 0.4);
+  color: var(--gold);
+  background: oklch(1 0 0 / 0.02);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+  display: inline-flex;
+}
+.btn-ghost-gold:hover {
+  background: oklch(0.78 0.13 85 / 0.1);
+  border-color: var(--gold);
+}
+.btn-ghost-gold:disabled { opacity: .4; cursor: not-allowed; }
+
+/* Glass card */
+.glass-card {
+  background: oklch(1 0 0 / 0.04);
+  border: 1px solid oklch(1 0 0 / 0.08);
+  backdrop-filter: blur(16px);
+  transition: all 0.4s cubic-bezier(.2,.8,.2,1);
+}
+.glass-card:hover {
+  border-color: oklch(0.78 0.13 85 / 0.4);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-elegant);
+}
+
+.hairline-gold {
+  background: linear-gradient(90deg, transparent, oklch(0.78 0.13 85 / 0.6), transparent);
+}
+
+.bg-ink { background-color: var(--ink); }
+.bg-onyx { background-color: var(--onyx); }
+.text-gold { color: var(--gold); }
+.bg-gold { background-color: var(--gold); }
+.border-gold { border-color: var(--gold); }
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-float { animation: float-slow 6s ease-in-out infinite; }
+.animate-fade-up { animation: fade-up 0.8s cubic-bezier(.2,.8,.2,1) both; }
+
+/* Accent color for native checkbox/radio */
+input[type="checkbox"].accent-gold { accent-color: var(--gold); }
+
+/* Grayscale iframe (contact map) */
+.grayscale-map { filter: grayscale(1); }
+
+/* Mobile nav drawer */
+#mobile-drawer {
+  transition: opacity 0.5s;
+}
+#mobile-drawer.closed {
+  opacity: 0;
+  pointer-events: none;
+}
+#mobile-drawer.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Booking form step visibility */
+.booking-step { display: none; }
+.booking-step.active { display: grid; }
