@@ -6,10 +6,18 @@ export interface JourneyCalculationParams {
   isReturn?: boolean;
   childSeats?: number;
   hours?: number;
+  airportDropoffFee?: number;
 }
 
 export function calculateEstimatedFare(params: JourneyCalculationParams): number {
-  const { serviceType, vehicleType, isReturn = false, childSeats = 0, hours = 3 } = params;
+  const {
+    serviceType,
+    vehicleType,
+    isReturn = false,
+    childSeats = 0,
+    hours = 3,
+    airportDropoffFee = 0,
+  } = params;
 
   // Base rates per vehicle tier
   let baseRate = 45;
@@ -34,7 +42,7 @@ export function calculateEstimatedFare(params: JourneyCalculationParams): number
     const hourlyRate = 45 * multiplier;
     total = hourlyRate * Math.max(hours, 2);
   } else if (serviceType === "airport") {
-    // Airport transfer base + meet & greet included
+    // Airport transfer base
     total = baseRate * 1.15;
   } else if (serviceType === "wedding") {
     // Wedding bespoke package min £180
@@ -51,6 +59,11 @@ export function calculateEstimatedFare(params: JourneyCalculationParams): number
   // Return journey (two legs with 10% roundtrip discount)
   if (isReturn) {
     total = total * 1.9;
+  }
+
+  // Add airport drop-off optional fee
+  if (airportDropoffFee > 0) {
+    total += airportDropoffFee * (isReturn ? 2 : 1);
   }
 
   return Math.round(total * 100) / 100;

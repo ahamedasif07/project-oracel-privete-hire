@@ -18,9 +18,12 @@ import {
   Sparkles,
   ShieldCheck,
   AlertCircle,
+  Navigation,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { AddressAutocomplete } from "@/components/booking/address-autocomplete";
+import { RouteMap } from "@/components/booking/route-map";
 import { calculateEstimatedFare } from "@/lib/pricing";
 import type { Booking } from "@/types";
 
@@ -64,6 +67,15 @@ const VEHICLES: VehicleOption[] = [
   },
 ];
 
+// Exact Airport Drop-off Add-ons
+const AIRPORT_ADDONS = [
+  { id: "heathrow", name: "Heathrow Airport", fee: 7.0 },
+  { id: "gatwick", name: "Gatwick Airport", fee: 10.0 },
+  { id: "luton", name: "Luton Airport", fee: 7.0 },
+  { id: "stansted", name: "Stansted Airport", fee: 7.0 },
+  { id: "london_city", name: "London City Airport", fee: 8.0 },
+];
+
 export function BookingWizard() {
   const searchParams = useSearchParams();
 
@@ -73,7 +85,14 @@ export function BookingWizard() {
   // Form State
   const [serviceType, setServiceType] = useState(searchParams.get("service") || "airport");
   const [pickupAddress, setPickupAddress] = useState("");
+  const [pickupCoords, setPickupCoords] = useState<{ lat: number; lng: number } | null>(null);
+
   const [dropoffAddress, setDropoffAddress] = useState(searchParams.get("dropoff") || "");
+  const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  const [routeDistanceMiles, setRouteDistanceMiles] = useState<number | null>(null);
+  const [routeDurationMins, setRouteDurationMins] = useState<number | null>(null);
+
   const [viaAddress, setViaAddress] = useState("");
   const [pickupDate, setPickupDate] = useState("");
   const [pickupTime, setPickupTime] = useState("");
@@ -82,6 +101,9 @@ export function BookingWizard() {
   const [returnTime, setReturnTime] = useState("");
   const [flightNumber, setFlightNumber] = useState("");
   const [hours, setHours] = useState(3);
+
+  // Add-ons state
+  const [selectedAirportAddon, setSelectedAirportAddon] = useState<string | null>(null);
 
   const [selectedVehicle, setSelectedVehicle] = useState(
     searchParams.get("vehicle") || "Executive Saloon"
@@ -101,6 +123,16 @@ export function BookingWizard() {
   const [submittedBooking, setSubmittedBooking] = useState<Booking | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [verifyingPayment, setVerifyingPayment] = useState(false);
+
+  // Auto-detect airport drop-off from destination address
+  useEffect(() => {
+    const lower = (dropoffAddress || "").toLowerCase();
+    if (lower.includes("heathrow")) setSelectedAirportAddon("heathrow");
+    else if (lower.includes("gatwick")) setSelectedAirportAddon("gatwick");
+    else if (lower.includes("luton")) setSelectedAirportAddon("luton");
+    else if (lower.includes("stansted")) setSelectedAirportAddon("stansted");
+    else if (lower.includes("london city")) setSelectedAirportAddon("london_city");
+  }, [dropoffAddress]);
 
   // Initialize today's date and check Stripe payment return status
   useEffect(() => {
@@ -137,8 +169,12 @@ export function BookingWizard() {
     }
   }, [searchParams]);
 
+  const airportDropoffFee = selectedAirportAddon
+    ? AIRPORT_ADDONS.find((a) => a.id === selectedAirportAddon)?.fee || 0
+    : 0;
+
   // Calculated live fare
-  const estimatedFare = calculateEstimatedFare({
+  const baseCalculatedFare = calculateEstimatedFare({
     serviceType,
     vehicleType: selectedVehicle,
     pickupAddress,
@@ -146,7 +182,30 @@ export function BookingWizard() {
     isReturn,
     childSeats,
     hours,
+    airportDropoffFee,
   });
+
+  const estimatedFare =
+    routeDistanceMiles && routeDistanceMiles > 0
+      ? Math.max(
+          45,
+          Number(
+            (
+              (selectedVehicle === "Prestige SUV" ? 85 : selectedVehicle === "Luxury MPV" ? 65 : 45) +
+              routeDistanceMiles *
+                (selectedVehicle === "Prestige SUV" ? 3.8 : selectedVehicle === "Luxury MPV" ? 3.2 : 2.5) *
+                (isReturn ? 1.85 : 1) +
+              childSeats * 10 +
+              airportDropoffFee * (isReturn ? 2 : 1)
+            ).toFixed(2)
+          )
+        )
+      : baseCalculatedFare;
+
+  const handleRouteChange = (distanceMiles: number, durationMins: number) => {
+    setRouteDistanceMiles(distanceMiles);
+    setRouteDurationMins(durationMins);
+  };
 
   const nextStep = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -155,7 +214,7 @@ export function BookingWizard() {
     // Step 1 Validation
     if (currentStep === 1) {
       if (!pickupAddress.trim() || !dropoffAddress.trim()) {
-        setErrorMessage("Please enter both Pickup and Destination addresses.");
+        setErrorMessage("Please select both Pickup and Destination locations.");
         return;
       }
       if (!pickupDate || !pickupTime) {
@@ -199,6 +258,8 @@ export function BookingWizard() {
       passengers: Number(passengers),
       luggage: Number(luggage),
       childSeats: Number(childSeats),
+      selectedAirportAddon,
+      airportDropoffFee,
       passengerName,
       passengerEmail,
       passengerPhone,
@@ -265,12 +326,12 @@ export function BookingWizard() {
     <div className="mx-auto max-w-4xl">
       {/* Progress Stepper (Visible on steps 1-4) */}
       {currentStep < 5 && (
-        <div className="mb-12">
+        <div className="mb-10">
           <div className="grid grid-cols-4 gap-2 text-center text-xs font-semibold">
             {[
-              { num: 1, title: "1. Journey" },
+              { num: 1, title: "1. Journey & Map" },
               { num: 2, title: "2. Vehicle" },
-              { num: 3, title: "3. Passenger" },
+              { num: 3, title: "3. Extras & Add-ons" },
               { num: 4, title: "4. Payment" },
             ].map((s) => (
               <div
@@ -297,18 +358,18 @@ export function BookingWizard() {
         </div>
       )}
 
-      {/* STEP 1: ROUTE & TIMING */}
+      {/* STEP 1: ROUTE, MAP & TIMING */}
       {currentStep === 1 && (
-        <div className="glass-card rounded-3xl p-8 md:p-10 border border-gold/20 shadow-2xl animate-fade-up space-y-8">
+        <div className="glass-card rounded-3xl p-6 md:p-10 border border-gold/20 shadow-2xl animate-fade-up space-y-8">
           <div>
             <span className="text-xs uppercase tracking-[0.24em] text-gold font-semibold">
               Step 1 of 4
             </span>
             <h2 className="mt-1 font-display text-2xl md:text-3xl text-white font-semibold">
-              Journey Specifications
+              Route Specifications &amp; Live Map
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Select your service type and journey details for an accurate quote.
+              Search any UK airport terminal, luxury hotel, street, or postcode with live driving navigation.
             </p>
           </div>
 
@@ -345,30 +406,42 @@ export function BookingWizard() {
             </div>
           </div>
 
-          {/* Route inputs */}
-          <div className="grid gap-5 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-2 font-medium">
-                Pick-up Location *
-              </label>
-              <Input
-                placeholder="Address, Hotel, Airport Terminal, Postcode"
-                value={pickupAddress}
-                onChange={(e) => setPickupAddress(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-2 font-medium">
-                Destination *
-              </label>
-              <Input
-                placeholder="Drop-off Address, Airport, Venue, Postcode"
-                value={dropoffAddress}
-                onChange={(e) => setDropoffAddress(e.target.value)}
-                required
-              />
-            </div>
+          {/* Route Autocomplete inputs */}
+          <div className="grid gap-6 sm:grid-cols-2">
+            <AddressAutocomplete
+              label="Pick-up Location (Origin)"
+              placeholder="e.g. Heathrow T5, Mayfair Hotel, SW1A 1AA..."
+              value={pickupAddress}
+              onChange={(val, coords) => {
+                setPickupAddress(val);
+                if (coords) setPickupCoords(coords);
+              }}
+              required
+              isPickup={true}
+            />
+
+            <AddressAutocomplete
+              label="Destination (Drop-off)"
+              placeholder="e.g. The Ritz London, Gatwick North, Postcode..."
+              value={dropoffAddress}
+              onChange={(val, coords) => {
+                setDropoffAddress(val);
+                if (coords) setDropoffCoords(coords);
+              }}
+              required
+              isPickup={false}
+            />
+          </div>
+
+          {/* Live Interactive Map Display */}
+          <div>
+            <RouteMap
+              pickupCoords={pickupCoords}
+              dropoffCoords={dropoffCoords}
+              pickupAddress={pickupAddress}
+              dropoffAddress={dropoffAddress}
+              onRouteChange={handleRouteChange}
+            />
           </div>
 
           {/* Date & Time */}
@@ -444,7 +517,7 @@ export function BookingWizard() {
               onClick={() => setIsReturn(!isReturn)}
               className={`px-5 py-2 rounded-full text-xs font-semibold transition-all ${
                 isReturn
-                  ? "bg-gold text-ink"
+                  ? "bg-gold text-ink font-bold"
                   : "bg-white/10 text-white hover:bg-white/20"
               }`}
             >
@@ -477,7 +550,17 @@ export function BookingWizard() {
             </div>
           )}
 
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-between items-center pt-4 border-t border-white/5">
+            <div>
+              {routeDistanceMiles ? (
+                <p className="text-xs text-muted-foreground">
+                  Driving Route: <strong className="text-gold font-mono">{routeDistanceMiles} Miles</strong> (~{routeDurationMins} Mins)
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">Instant fixed fare calculation</p>
+              )}
+            </div>
+
             <button
               type="button"
               onClick={nextStep}
@@ -508,15 +591,23 @@ export function BookingWizard() {
           <div className="space-y-4">
             {VEHICLES.map((v) => {
               const isSelected = selectedVehicle === v.name;
-              const vehicleFare = calculateEstimatedFare({
-                serviceType,
-                vehicleType: v.name,
-                pickupAddress,
-                dropoffAddress,
-                isReturn,
-                childSeats,
-                hours,
-              });
+              const vehicleFare =
+                routeDistanceMiles && routeDistanceMiles > 0
+                  ? (v.name === "Prestige SUV" ? 85 : v.name === "Luxury MPV" ? 65 : 45) +
+                    routeDistanceMiles * (v.name === "Prestige SUV" ? 3.8 : v.name === "Luxury MPV" ? 3.2 : 2.5) *
+                      (isReturn ? 1.85 : 1) +
+                    childSeats * 10 +
+                    airportDropoffFee * (isReturn ? 2 : 1)
+                  : calculateEstimatedFare({
+                      serviceType,
+                      vehicleType: v.name,
+                      pickupAddress,
+                      dropoffAddress,
+                      isReturn,
+                      childSeats,
+                      hours,
+                      airportDropoffFee,
+                    });
 
               return (
                 <div
@@ -598,14 +689,14 @@ export function BookingWizard() {
               onClick={nextStep}
               className="rounded-full btn-gold px-8 py-3.5 text-sm font-semibold shadow-gold inline-flex items-center gap-2"
             >
-              <span>Passenger Details</span>
+              <span>Extras &amp; Add-ons</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>
       )}
 
-      {/* STEP 3: PASSENGER & EXTRAS */}
+      {/* STEP 3: PASSENGER & OPTIONAL AIRPORT ADD-ONS */}
       {currentStep === 3 && (
         <div className="glass-card rounded-3xl p-8 md:p-10 border border-gold/20 shadow-2xl animate-fade-up space-y-8">
           <div>
@@ -613,10 +704,10 @@ export function BookingWizard() {
               Step 3 of 4
             </span>
             <h2 className="mt-1 font-display text-2xl md:text-3xl text-white font-semibold">
-              Passenger &amp; Journey Preferences
+              Passenger Details &amp; Optional Add-ons
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Please enter the lead passenger details for SMS and email dispatch.
+              Please enter the lead passenger details and select any optional airport drop-off charges.
             </p>
           </div>
 
@@ -687,7 +778,7 @@ export function BookingWizard() {
             </div>
             <div>
               <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-2 font-medium">
-                Child / Booster Seats
+                Child / Booster Seats (+£10 ea)
               </label>
               <Input
                 type="number"
@@ -697,6 +788,65 @@ export function BookingWizard() {
                 onChange={(e) => setChildSeats(Number(e.target.value))}
               />
             </div>
+          </div>
+
+          {/* EXACT AIRPORT DROP-OFF OPTIONAL ADD-ON TABLE (From User Screenshot) */}
+          <div className="rounded-2xl border border-white/10 bg-[#0E0E12] overflow-hidden p-5 md:p-6 space-y-4">
+            <div>
+              <h3 className="text-xs uppercase tracking-wider text-gold font-bold">
+                AIRPORT DROP-OFF (OPTIONAL ADD-ON)
+              </h3>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                All airport prices shown are inclusive of the drop-off charge. Select one if your journey ends at an airport &mdash; it will be added to your total fare.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-white/5 bg-[#141418] overflow-hidden">
+              <div className="grid grid-cols-2 p-3 bg-black/40 border-b border-white/5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                <span>AIRPORT</span>
+                <span className="text-right">DROP-OFF CHARGE</span>
+              </div>
+
+              <div className="divide-y divide-white/5">
+                {AIRPORT_ADDONS.map((addon) => {
+                  const isChecked = selectedAirportAddon === addon.id;
+                  return (
+                    <div
+                      key={addon.id}
+                      onClick={() => setSelectedAirportAddon(isChecked ? null : addon.id)}
+                      className={`grid grid-cols-2 p-3.5 items-center cursor-pointer transition-colors ${
+                        isChecked ? "bg-gold/10 text-gold" : "hover:bg-white/5 text-foreground"
+                      }`}
+                    >
+                      <label className="flex items-center gap-3 cursor-pointer select-none">
+                        <div
+                          className={`h-4 w-4 rounded border flex items-center justify-center transition-all ${
+                            isChecked
+                              ? "border-gold bg-gold text-ink"
+                              : "border-white/30 bg-black/40"
+                          }`}
+                        >
+                          {isChecked && <span className="text-[10px] font-bold">✓</span>}
+                        </div>
+                        <span className="text-xs font-medium">{addon.name}</span>
+                      </label>
+                      <div className="text-right">
+                        <span className={`text-xs font-mono font-bold ${isChecked ? "text-gold" : "text-foreground/90"}`}>
+                          £{addon.fee.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {selectedAirportAddon && (
+              <div className="flex items-center justify-between text-xs text-gold pt-1">
+                <span>Selected Drop-off Charge:</span>
+                <span className="font-bold font-mono">+£{airportDropoffFee.toFixed(2)}</span>
+              </div>
+            )}
           </div>
 
           {/* Special Requests */}
@@ -756,6 +906,11 @@ export function BookingWizard() {
                   {selectedVehicle}
                 </span>
                 <p className="font-display text-xl text-white font-semibold">{serviceType.toUpperCase()}</p>
+                {routeDistanceMiles && (
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {routeDistanceMiles} Miles &middot; ~{routeDurationMins} Mins Drive
+                  </p>
+                )}
               </div>
               <div className="text-right">
                 <span className="text-xs uppercase tracking-widest text-muted-foreground">
@@ -792,6 +947,16 @@ export function BookingWizard() {
                     Flight Number
                   </span>
                   <span className="text-gold font-semibold">{flightNumber}</span>
+                </div>
+              )}
+              {selectedAirportAddon && (
+                <div>
+                  <span className="text-muted-foreground uppercase text-[10px] tracking-wider block">
+                    Airport Drop-off Add-on
+                  </span>
+                  <span className="text-gold font-semibold">
+                    {AIRPORT_ADDONS.find((a) => a.id === selectedAirportAddon)?.name} (+£{airportDropoffFee.toFixed(2)})
+                  </span>
                 </div>
               )}
               {isReturn && (
@@ -1001,6 +1166,14 @@ export function BookingWizard() {
                 {submittedBooking.pickupDate} at {submittedBooking.pickupTime}
               </span>
             </div>
+            {selectedAirportAddon && (
+              <div className="flex justify-between border-b border-white/5 pb-2">
+                <span className="text-muted-foreground">Airport Drop-off</span>
+                <span className="text-gold font-medium">
+                  {AIRPORT_ADDONS.find((a) => a.id === selectedAirportAddon)?.name} (+£{airportDropoffFee.toFixed(2)})
+                </span>
+              </div>
+            )}
             <div className="flex justify-between border-b border-white/5 pb-2">
               <span className="text-muted-foreground">Payment Method</span>
               <span className="text-white font-medium">
@@ -1025,6 +1198,10 @@ export function BookingWizard() {
                 setSubmittedBooking(null);
                 setPickupAddress("");
                 setDropoffAddress("");
+                setPickupCoords(null);
+                setDropoffCoords(null);
+                setRouteDistanceMiles(null);
+                setSelectedAirportAddon(null);
               }}
               className="rounded-full btn-gold px-8 py-3.5 text-xs font-semibold"
             >
