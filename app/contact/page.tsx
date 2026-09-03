@@ -6,7 +6,10 @@ import { Phone, Mail, MessageSquare, AlertCircle, Clock, MapPin, CheckCircle, Se
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
+import { useGlobalLoader } from "@/context/loading-context";
+
 export default function ContactPage() {
+  const { showLoader, hideLoader } = useGlobalLoader();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -67,6 +70,7 @@ export default function ContactPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    showLoader("Submitting VIP Inquiry...", "Connecting directly with 24/7 chauffeur concierge desk");
 
     try {
       const res = await fetch("/api/contact", {
@@ -77,7 +81,7 @@ export default function ContactPage() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to submit message");
+        throw new Error(data.error || "Failed to send message.");
       }
 
       setSuccess(true);
@@ -89,10 +93,11 @@ export default function ContactPage() {
         message: "",
       });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "An error occurred. Please try again.";
+      const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
       setError(msg);
     } finally {
       setLoading(false);
+      hideLoader();
     }
   };
 

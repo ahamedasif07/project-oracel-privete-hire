@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { LoadingProvider } from "@/context/loading-context";
 
 export const metadata: Metadata = {
   title: {
@@ -42,10 +43,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark scroll-smooth">
       <body className="min-h-screen bg-[#0D0D0D] text-foreground antialiased selection:bg-gold selection:text-ink">
-        <Navbar />
-        <main className="relative min-h-screen">{children}</main>
-        <Footer />
+        <LoadingProvider>
+          <Navbar />
+          <main className="relative min-h-screen">{children}</main>
+          <Footer />
+        </LoadingProvider>
       </body>
     </html>
   );
 }
+

@@ -25,6 +25,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { AddressAutocomplete } from "@/components/booking/address-autocomplete";
 import { RouteMap } from "@/components/booking/route-map";
 import { calculateEstimatedFare } from "@/lib/pricing";
+import { LuxuryCarLoader } from "@/components/ui/luxury-car-loader";
+import { useGlobalLoader } from "@/context/loading-context";
 import type { Booking } from "@/types";
 
 interface VehicleOption {
@@ -239,9 +241,17 @@ export function BookingWizard() {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
+  const { showLoader, hideLoader } = useGlobalLoader();
+
   const handleFinalSubmit = async () => {
     setIsSubmitting(true);
     setErrorMessage(null);
+    showLoader(
+      paymentMethod === "card_pay"
+        ? "Connecting to Stripe Secure Gateway..."
+        : "Confirming VIP Chauffeur Booking...",
+      "Allocating executive vehicle & generating encrypted dispatch order"
+    );
 
     const payload = {
       serviceType,
@@ -307,17 +317,18 @@ export function BookingWizard() {
       setErrorMessage(msg);
     } finally {
       setIsSubmitting(false);
+      hideLoader();
     }
   };
 
   if (verifyingPayment) {
     return (
-      <div className="glass-card rounded-3xl p-12 text-center max-w-lg mx-auto border border-gold/30">
-        <Loader2 className="h-10 w-10 animate-spin text-gold mx-auto mb-4" />
-        <h3 className="font-display text-xl text-white font-bold">Verifying Stripe Payment</h3>
-        <p className="text-xs text-muted-foreground mt-2">
-          Please wait while we confirm your card transaction and generate your booking voucher...
-        </p>
+      <div className="flex items-center justify-center p-6">
+        <LuxuryCarLoader
+          message="Verifying Stripe Payment..."
+          subMessage="Confirming card transaction & generating your luxury travel voucher"
+          variant="card"
+        />
       </div>
     );
   }

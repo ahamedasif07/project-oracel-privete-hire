@@ -17,8 +17,11 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
+import { useGlobalLoader } from "@/context/loading-context";
+
 export default function ForgotPasswordWizardPage() {
   const router = useRouter();
+  const { showLoader, hideLoader } = useGlobalLoader();
 
   // Wizard Steps: 1 = Email, 2 = Verify OTP, 3 = New Password, 4 = Success
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -45,6 +48,7 @@ export default function ForgotPasswordWizardPage() {
 
     setLoading(true);
     setError(null);
+    showLoader("Dispatching Security Code...", "Generating 6-digit one-time cryptographic code");
 
     try {
       const res = await fetch("/api/admin/auth/forgot-password", {
@@ -65,6 +69,7 @@ export default function ForgotPasswordWizardPage() {
       setError(err.message || "Could not dispatch reset code. Please try again.");
     } finally {
       setLoading(false);
+      hideLoader();
     }
   };
 
@@ -81,6 +86,7 @@ export default function ForgotPasswordWizardPage() {
 
     setLoading(true);
     setError(null);
+    showLoader("Verifying OTP Authorization...", "Confirming security key with database records");
 
     try {
       const res = await fetch("/api/admin/auth/verify-otp", {
@@ -99,6 +105,7 @@ export default function ForgotPasswordWizardPage() {
       setError(err.message || "Invalid code. Please re-check your email inbox.");
     } finally {
       setLoading(false);
+      hideLoader();
     }
   };
 
@@ -118,6 +125,7 @@ export default function ForgotPasswordWizardPage() {
 
     setLoading(true);
     setError(null);
+    showLoader("Updating Database Password...", "Applying bcrypt hash & refreshing admin security token");
 
     try {
       const res = await fetch("/api/admin/auth/reset-password", {
@@ -139,6 +147,7 @@ export default function ForgotPasswordWizardPage() {
       setError(err.message || "Failed to reset password.");
     } finally {
       setLoading(false);
+      hideLoader();
     }
   };
 

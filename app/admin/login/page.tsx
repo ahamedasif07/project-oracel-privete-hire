@@ -6,11 +6,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Lock, User, Loader2, ShieldCheck, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { useGlobalLoader } from "@/context/loading-context";
 
 function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get("redirect") || "/admin";
+  const { showLoader, hideLoader } = useGlobalLoader();
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -26,6 +28,7 @@ function AdminLoginForm() {
 
     setLoading(true);
     setError(null);
+    showLoader("Authorizing Security Clearance...", "Verifying 256-bit encrypted admin session");
 
     try {
       const res = await fetch("/api/admin/login", {
@@ -58,6 +61,7 @@ function AdminLoginForm() {
       }
     } finally {
       setLoading(false);
+      hideLoader();
     }
   };
 
