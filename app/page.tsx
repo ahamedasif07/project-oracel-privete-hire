@@ -25,10 +25,10 @@ import {
 
 export default function HomePage() {
   const stats = [
-    { value: "15+", label: "Years of Chauffeur Prestige" },
-    { value: "50,000+", label: "VIP Journeys Completed" },
-    { value: "4.98 ★", label: "Trustpilot Client Rating" },
-    { value: "100%", label: "Guaranteed Punctuality" },
+    { value: "5+", label: "Years of Chauffeur Prestige" },
+    { value: "50,00+", label: "VIP Journeys Completed" },
+    { value: "4.88 ★", label: "Trustpilot Client Rating" },
+    { value: "97%", label: "Guaranteed Punctuality" },
   ];
 
   const services = [
