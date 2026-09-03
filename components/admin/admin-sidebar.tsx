@@ -39,7 +39,14 @@ export function AdminSidebar() {
     }
   };
 
-  if (pathname === "/admin/login") {
+  const isAuthPage =
+    pathname === "/admin/login" ||
+    pathname === "/admin/forgot-password" ||
+    pathname === "/admin/reset-password" ||
+    pathname?.startsWith("/admin/forgot-password") ||
+    pathname?.startsWith("/admin/reset-password");
+
+  if (isAuthPage) {
     return null;
   }
 

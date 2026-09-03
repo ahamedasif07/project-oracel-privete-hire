@@ -289,6 +289,26 @@ class AuthService {
       targetEmail = envEmail;
       targetName = "Oracle Master Admin";
       foundUser = true;
+
+      const localAdmins = this.getLocalAdmins();
+      let master = localAdmins.find(
+        (a) => a.email.toLowerCase() === envEmail || (a.username && a.username.toLowerCase() === envUsername)
+      );
+      if (!master) {
+        master = {
+          id: "admin_master_1",
+          name: "Oracle Master Admin",
+          username: envUsername,
+          email: envEmail,
+          role: "SUPER_ADMIN",
+          createdAt: new Date().toISOString(),
+        };
+        localAdmins.push(master);
+      }
+      master.resetPasswordOtp = otpCode;
+      master.resetPasswordToken = resetToken;
+      master.resetPasswordExpires = expires.toISOString();
+      this.saveLocalAdmins(localAdmins);
     }
 
     if (!foundUser || !targetEmail) {
